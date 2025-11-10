@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -45,6 +46,7 @@ public class AuthService {
     }
 
     private void sendVerificationEmail(User newUser) {
+        log.info("Inside AuthService - sendVerificationEmail(): {}",newUser);
         try{
             String link = appBaseUrl+"/api/auth/verify-email?token="+newUser.getVerificationToken();
             String html = "<div style='font-family:sans-serif'>" +
@@ -55,8 +57,9 @@ public class AuthService {
                     "<p>Or copy this link: " + link + "</p>" +
                     "<p>This link expires in 24 hours</p>" +
                     "</div>";
-            emailService.sendHtmlEmail(newUser.getEmail(),"verify your email",html);
+            emailService.sendHtmlEmail(newUser.getEmail(),"verify your gmail",html);
         }catch (Exception e){
+            log.error("Exception occured at sendVerificationEmail(): {}",e.getMessage());
             throw new RuntimeException("Failed to send verification email: "+e.getMessage());
         }
     }
@@ -84,6 +87,19 @@ public class AuthService {
                 .verificationToken(UUID.randomUUID().toString())
                 .verificationExpires(LocalDateTime.now().plusHours(24))
                 .build();
+    }
+    public void verifyEmail(String token){
+        log.info("Inside AuthService: verifyEmail(): {}",token);
+        User user = userRepository.findByVerificationToken(token)
+                .orElseThrow(()-> new RuntimeException("Invalid or expired verification token"));
+
+        if(user.getVerificationExpires()!= null && user.getVerificationExpires().isBefore(LocalDateTime.now())){
+            throw new RuntimeException("Verification token has already expired");
+        }
+        user.setEmailVerified(true);
+        user.setVerificationToken(null);
+        user.setVerificationExpires(null);
+        userRepository.save(user);
     }
 }
 
