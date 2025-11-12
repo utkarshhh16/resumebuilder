@@ -42,7 +42,7 @@ public ResponseEntity<Map<String,Object>> handleResourceExistException(ResourceE
 }
 @ExceptionHandler(Exception.class)
 public ResponseEntity<Map<String,Object>> handleGenericException(Exception ex){
-    log.info("Inside GlobalExceptionHandler - handleGenericException()");
+//    log.info("Inside GlobalExceptionHandler - handleGenericException()");
     Map<String,Object> response = new HashMap<>();
     response.put("message","Something went wrong contact administrator");
     response.put("errors",ex.getMessage());
